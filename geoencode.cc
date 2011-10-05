@@ -35,15 +35,30 @@ using namespace std;
  *  Only designed to work with positive angles.
  */
 struct DegreesMinutesSeconds {
+    /** Number of degrees.
+     *
+     *  Range 0 <= degrees <= 180 for latitude, 0 <= degrees < 360 for
+     *  longitude.
+     */
     int degrees;
+
+    /** Number of minutes: 0 to 59 */
     int minutes;
+
+    /** Number of seconds: 0 to 59 */
     int seconds;
+
+    /** Number of 16ths of a second: 0 to 15 */
     int sec16ths;
 
-    // Initialise with a (positive) angle, as an integer representing the
-    // number of 16ths of a second, rounding to nearest.  The range of valid
-    // angles is assumed to be 0 <= angle in degres < 360, so range of
-    // angle_16th_secs is 0..20735999, which fits easily into a 32 bit int.
+    /** Initialise with a (positive) angle, as an integer representing the
+     *  number of 16ths of a second, rounding to nearest.
+     *
+     *  The range of valid angles is assumed to be 0 <= angle in degrees < 360,
+     *  so range of angle_16th_secs is 0..20735999, which fits easily into a 32
+     *  bit int.  (Latitudes are represented in the range 0 <= angle <= 180,
+     *  where 0 is the south pole.)
+     */
     DegreesMinutesSeconds(int angle_16th_secs) {
 	degrees = angle_16th_secs / (3600 * 16);
 	angle_16th_secs = angle_16th_secs % (3600 * 16);
@@ -55,7 +70,7 @@ struct DegreesMinutesSeconds {
 };
 
 bool
-geo_encode(double lat, double lon, string & result)
+GeoEncode::encode(double lat, double lon, string & result)
 {
     // Check range of latitude.
     if (rare(lat < -90.0 || lat > 90.0)) {
@@ -115,12 +130,12 @@ geo_encode(double lat, double lon, string & result)
     return true;
 }
 
-LatLongCoord
-geo_decode(const char * value, size_t len)
+GeoEncode::LatLongCoord
+GeoEncode::decode(const char * value, size_t len)
 {
     const unsigned char * ptr
 	    = reinterpret_cast<const unsigned char *>(value);
-    LatLongCoord result;
+    GeoEncode::LatLongCoord result;
     unsigned tmp = (ptr[0] & 0xff) << 8 | (ptr[1] & 0xff);
     result.lat = tmp % 181;
     result.lon = tmp / 181;

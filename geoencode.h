@@ -28,6 +28,8 @@
 
 #include <string>
 
+namespace GeoEncode {
+
 /** A latitude-longitude coordinate.
  */
 struct LatLongCoord {
@@ -59,7 +61,7 @@ struct LatLongCoord {
  * have been extended by 6 bytes.
  */
 extern bool
-geo_encode(double lat, double lon, std::string & result);
+encode(double lat, double lon, std::string & result);
 
 /** Encode a coordinate and append it to a string.
  *
@@ -72,9 +74,9 @@ geo_encode(double lat, double lon, std::string & result);
  * have been extended by 6 bytes.
  */
 inline bool
-geo_encode(const LatLongCoord & coord, std::string & result)
+encode(const LatLongCoord & coord, std::string & result)
 {
-    return geo_encode(coord.lat, coord.lon, result);
+    return GeoEncode::encode(coord.lat, coord.lon, result);
 }
 
 /** Decode a coordinate from a buffer.
@@ -90,7 +92,8 @@ geo_encode(const LatLongCoord & coord, std::string & result)
  * first 6 bytes) will be ignored, and it is possible for invalid inputs to
  * result in out-of-range longitudes.
  */
-extern LatLongCoord geo_decode(const char * value, size_t len);
+extern LatLongCoord
+decode(const char * value, size_t len);
 
 /** Decode a coordinate from a string.
  *
@@ -104,9 +107,11 @@ extern LatLongCoord geo_decode(const char * value, size_t len);
  * result in out-of-range longitudes.
  */
 inline LatLongCoord
-geo_decode(const std::string & value)
+decode(const std::string & value)
 {
-    return geo_decode(value.data(), value.size());
+    return GeoEncode::decode(value.data(), value.size());
+}
+
 }
 
 #endif /* GEOENCODE_INCLUDED_H */

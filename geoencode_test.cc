@@ -34,12 +34,12 @@ using namespace std;
 
 bool check(double lat, double lon, double expected_lat, double expected_lon) {
     string encoded;
-    bool ok = geo_encode(lat, lon, encoded);
+    bool ok = GeoEncode::encode(lat, lon, encoded);
     if (!ok) {
 	fprintf(stderr, "encoding failed\n");
 	return false;
     }
-    LatLongCoord result = geo_decode(encoded);
+    GeoEncode::LatLongCoord result = GeoEncode::decode(encoded);
     if (fabs(result.lat - expected_lat) > 0.00000001) {
 	fprintf(stderr, "result.lat != expected_lat: %.15g != %.15g (input=%.15g,%.15g)\n", result.lat, expected_lat, lat, lon);
 	return false;
@@ -57,7 +57,7 @@ bool check(double lat, double lon) {
 
 bool check_fail(double lat, double lon) {
     string encoded;
-    bool ok = geo_encode(lat, lon, encoded);
+    bool ok = GeoEncode::encode(lat, lon, encoded);
     if (ok) {
 	fprintf(stderr, "expected failure but encoded without error\n");
 	return false;
