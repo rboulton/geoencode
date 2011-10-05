@@ -45,31 +45,29 @@ struct LatLongCoord {
     double lon;
 };
 
-/** Encode a coordinate to a string.
+/** Encode a coordinate and append it to a string.
  *
  * @param lat The latitude coordinate in degrees (ranging from -90 to +90)
  * @param lon The longitude coordinate in degrees (any range is valid -
  *            longitudes will be wrapped).  Note that decoding will return
  *            longitudes in the range 0 <= value < 360.
- * @param result The string to return the result in.  Any existing value in the
- *               string will be overwritten.
+ * @param result The string to append the result to.
  *
  * @returns true if the encoding was successful, false if there was an error.
- * If there was an error, the result value may be unmodified or partially
- * modified; currently, the only cause of error is out-of-range latitudes.
+ * If there was an error, the result value will be unmodified.  The only cause
+ * of error is out-of-range latitudes.
  */
 extern bool
 geo_encode(double lat, double lon, std::string & result);
 
-/** Encode a coordinate to a string.
+/** Encode a coordinate and append it to a string.
  *
  * @param coord The coordinate to encode.
- * @param result The string to return the result in.  Any existing value in the
- *               string will be overwritten.
+ * @param result The string to append the result to.
  *
  * @returns true if the encoding was successful, false if there was an error.
- * If there was an error, the result value may be unmodified or partially
- * modified; currently, the only cause of error is out-of-range latitudes.
+ * If there was an error, the result value will be unmodified.  The only cause
+ * of error is out-of-range latitudes.
  */
 inline bool
 geo_encode(const LatLongCoord & coord, std::string & result)
