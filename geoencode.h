@@ -55,7 +55,8 @@ struct LatLongCoord {
  *
  * @returns true if the encoding was successful, false if there was an error.
  * If there was an error, the result value will be unmodified.  The only cause
- * of error is out-of-range latitudes.
+ * of error is out-of-range latitudes.  If there was no error, the string will
+ * have been extended by 6 bytes.
  */
 extern bool
 geo_encode(double lat, double lon, std::string & result);
@@ -67,7 +68,8 @@ geo_encode(double lat, double lon, std::string & result);
  *
  * @returns true if the encoding was successful, false if there was an error.
  * If there was an error, the result value will be unmodified.  The only cause
- * of error is out-of-range latitudes.
+ * of error is out-of-range latitudes.  If there was no error, the string will
+ * have been extended by 6 bytes.
  */
 inline bool
 geo_encode(const LatLongCoord & coord, std::string & result)
