@@ -20,3 +20,9 @@ The encoding has some interesting features:
  - tests on a several-years-old desktop show that over a million
    encode-decode cycles can be performed in a second.  Moreover, decoding
    is considerably faster than encoding.
+
+Code is provided for encoding and decoding coordinates.  A class is also
+provided which can be used to perform a bounds check while decoding, aborting
+the decoding operation if the coordinate is out of bounds; this designed to
+avoid excess calculation when decoding many coordinates, but when you are only
+interested in those coordinates within a bounding box.
