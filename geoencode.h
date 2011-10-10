@@ -112,6 +112,67 @@ decode(const std::string & value)
     return GeoEncode::decode(value.data(), value.size());
 }
 
+class DecoderWithBoundingBox {
+    /** Longitude at western edge of bounding box.
+     */
+    double lon1;
+
+    /** Longitude at eastern edge of bounding box.
+     */
+    double lon2;
+
+    /** Minimum latitude in bounding box.
+     */
+    double min_lat;
+
+    /** Maximum latitude in bounding box.
+     */
+    double max_lat;
+
+    /** First byte of encoded form of coordinates with lon1.
+     */
+    unsigned char start1;
+
+    /** First byte of encoded form of coordinates with lon2.
+     */
+    unsigned char start2;
+
+    /** True if either of the poles are included in the range.
+     */
+    bool include_poles;
+
+    /** Flag; true if the longitude range is discontinuous (ie, goes over the
+     *  boundary at which longitudes wrap from 360 to 0).
+     */
+    bool discontinuous_longitude_range;
+
+  public:
+    /** Create a decoder with a bounding box.
+     *
+     *  The decoder will decode any encoded coordinates which lie inside the
+     *  bounding box, and return false for any which lie outside the bounding
+     *  box.
+     *
+     *  @param lat1 The latitude of the southern edge of the bounding box.
+     *  @param lon1 The longitude of the western edge of the bounding box.
+     *  @param lat2 The latitude of the northern edge of the bounding box.
+     *  @param lon2 The longitude of the eastern edge of the bounding box.
+     */
+    DecoderWithBoundingBox(double lat1, double lon1, double lat2, double lon2);
+
+    /** Decode a coordinate.
+     *
+     *  @param value The coordinate to decode.
+     *
+     *  @param result A structure to store the decoded coordinate in.
+     *
+     *  @returns true if the coordinate was in the bounding box (in which case,
+     *           @a result will have been updated to contain the coordinate),
+     *           or false if the coordinate is outside the bounding box.
+     */
+    bool decode(const std::string & value, LatLongCoord & result) const;
+};
+
 }
 
 #endif /* GEOENCODE_INCLUDED_H */

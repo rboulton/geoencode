@@ -76,25 +76,26 @@ GeoEncode::encode(double lat, double lon, string & result)
     if (rare(lat < -90.0 || lat > 90.0)) {
 	return false;
     }
-    // Calc latitude and longitude in integral number of 16ths of a second
-    int lat_int = round((lat + 90.0) * 57600.0);
-    int lon_int;
-    if (lat_int == 0 || lat_int == 57600 * 180) {
-	lon_int = 0;
+
+    // Wrap longitude to range [0,360).
+    lon = fmod(lon, 360.0);
+    if (lon < 0) {
+	lon += 360;
+    }
+
+    int lat_16ths, lon_16ths;
+    lat_16ths = round((lat + 90.0) * 57600.0);
+    if (lat_16ths == 0 || lat_16ths == 57600 * 180) {
+	lon_16ths = 0;
     } else {
-	// Wrap longitude to range [0,360).
-	lon = fmod(lon, 360.0);
-	if (lon < 0) {
-	    lon += 360;
-	}
-	lon_int = round(lon * 57600.0);
-	if (lon_int == 57600 * 360) {
-	    lon_int = 0;
+	lon_16ths = round(lon * 57600.0);
+	if (lon_16ths == 57600 * 360) {
+	    lon_16ths = 0;
 	}
     }
 
-    DegreesMinutesSeconds lat_dms(lat_int);
-    DegreesMinutesSeconds lon_dms(lon_int);
+    DegreesMinutesSeconds lat_dms(lat_16ths);
+    DegreesMinutesSeconds lon_dms(lon_16ths);
 
     size_t old_len = result.size();
     result.resize(old_len + 6);
@@ -173,4 +174,92 @@ GeoEncode::decode(const char * value, size_t len)
 
     result.lat -= 90.0;
     return result;
+}
+
+/// Calc latitude and longitude in integral number of 16ths of a second
+static void
+calc_latlon_16ths(double lat, double lon, int & lat_16ths, int & lon_16ths)
+{
+    lat_16ths = round((lat + 90.0) * 57600.0);
+    lon_16ths = round(lon * 57600.0);
+    if (lon_16ths == 57600 * 360) {
+	lon_16ths = 0;
+    }
+}
+
+GeoEncode::DecoderWithBoundingBox::DecoderWithBoundingBox
+(double lat1, double lon1_, double lat2, double lon2_)
+	: lon1(lon1_), lon2(lon2_),
+	  min_lat(lat1), max_lat(lat2),
+	  include_poles(false)
+{
+    // Wrap longitudes to range [0,360).
+    lon1 = fmod(lon1, 360.0);
+    if (lon1 < 0) {
+	lon1 += 360;
+    }
+
+    lon2 = fmod(lon2, 360.0);
+    if (lon2 < 0) {
+	lon2 += 360;
+    }
+
+    // Calculate start1
+    int lat_16ths, lon_16ths;
+    calc_latlon_16ths(lat1, lon1, lat_16ths, lon_16ths);
+    if (lat_16ths == 0 || lat_16ths == 57600 * 180) {
+	include_poles = true;
+    }
+    unsigned dd = lat_16ths / (3600 * 16) + (lon_16ths / (3600 * 16)) * 181;
+    start1 = char(dd >> 8);
+
+    calc_latlon_16ths(lat2, lon2, lat_16ths, lon_16ths);
+    if (lat_16ths == 0 || lat_16ths == 57600 * 180) {
+	include_poles = true;
+    }
+    dd = lat_16ths / (3600 * 16) + (lon_16ths / (3600 * 16)) * 181;
+    start2 = char(dd >> 8);
+
+    discontinuous_longitude_range = (lon1 > lon2);
+}
+
+bool
+GeoEncode::DecoderWithBoundingBox::decode(const std::string & value,
+					  LatLongCoord & result) const
+{
+    unsigned char start = value[0];
+    if (discontinuous_longitude_range) {
+	// start must be outside range of (start2..start1)
+	// (start2 will be > start1)
+	if (start2 < start && start < start1) {
+	    if (!(include_poles && start == 0))
+		return false;
+	}
+    } else {
+	// start must be inside range of [start1..start2] (inclusive of ends).
+	if (start < start1 || start2 < start) {
+	    if (!(include_poles && start == 0))
+		return false;
+	}
+    }
+    GeoEncode::LatLongCoord decoded = GeoEncode::decode(value);
+    if (decoded.lat < min_lat || decoded.lat > max_lat) {
+	return false;
+    }
+    if (decoded.lat == -90 || decoded.lat == 90) {
+	// It's a pole, so the longitude isn't meaningful (will be zero)
+	// and we've already checked that the latitude is in range.
+	result = decoded;
+	return true;
+    }
+    if (discontinuous_longitude_range) {
+	if (lon2 < decoded.lon && decoded.lon < lon1)
+	    return false;
+    } else {
+	if (decoded.lon < lon1 || lon2 < decoded.lon)
+	    return false;
+    }
+
+    result = decoded;
+    return true;
 }
