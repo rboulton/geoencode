@@ -112,6 +112,12 @@ decode(const std::string & value)
     return GeoEncode::decode(value.data(), value.size());
 }
 
+/** A class for decoding coordinates within a bounding box.
+ *
+ *  This class aborts decoding if it is easily able to determine that the
+ *  encoded coordinate supplied is outside the bounding box, avoiding some
+ *  unnecessary work.
+ */
 class DecoderWithBoundingBox {
     /** Longitude at western edge of bounding box.
      */
