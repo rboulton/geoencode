@@ -42,13 +42,18 @@ bool check(double lat, double lon, double expected_lat, double expected_lon) {
 	fprintf(stderr, "encoding failed\n");
 	return false;
     }
-    GeoEncode::LatLongCoord result = GeoEncode::decode(encoded);
-    if (fabs(result.lat - expected_lat) > 0.00000001) {
-	fprintf(stderr, "result.lat != expected_lat: %.15g != %.15g (input=%.15g,%.15g)\n", result.lat, expected_lat, lat, lon);
+    double decoded_lat, decoded_lon;
+    GeoEncode::decode(encoded, decoded_lat, decoded_lon);
+    if (fabs(decoded_lat - expected_lat) > 0.00000001) {
+	fprintf(stderr, "decoded_lat != expected_lat: %.15g != "
+		"%.15g (input=%.15g,%.15g)\n", decoded_lat, expected_lat,
+		lat, lon);
 	return false;
     }
-    if (fabs(result.lon - expected_lon) > 0.00000001) {
-	fprintf(stderr, "result.lon != expected_lon: %.15g != %.15g (input=%.15g,%.15g)\n", result.lon, expected_lon, lat, lon);
+    if (fabs(decoded_lon - expected_lon) > 0.00000001) {
+	fprintf(stderr, "decoded_lon != expected_lon: %.15g != "
+		"%.15g (input=%.15g,%.15g)\n", decoded_lon, expected_lon,
+		lat, lon);
 	return false;
     }
     return true;
@@ -84,15 +89,16 @@ bool check_bb(GeoEncode::DecoderWithBoundingBox & bb, double lat, double lon,
 	fprintf(stderr, "encoding failed\n");
 	return false;
     }
-    GeoEncode::LatLongCoord result;
-    if (bb.decode(encoded, result)) {
-	GeoEncode::LatLongCoord result2 = GeoEncode::decode(encoded);
-	if (result.lat != result2.lat) {
-	    fprintf(stderr, "result.lat != expected_lat: %.15g != %.15g (input=%.15g,%.15g)\n", result.lat, result2.lat, lat, lon);
+    double decoded_lat, decoded_lon;
+    if (bb.decode(encoded, decoded_lat, decoded_lon)) {
+	double decoded_lat2, decoded_lon2;
+	GeoEncode::decode(encoded, decoded_lat2, decoded_lon2);
+	if (decoded_lat != decoded_lat2) {
+	    fprintf(stderr, "decoded_lat != decoded_lat2: %.15g != %.15g (input=%.15g,%.15g)\n", decoded_lat, decoded_lat2, lat, lon);
 	    return false;
 	}
-	if (result.lon != result2.lon) {
-	    fprintf(stderr, "result.lon != expected_lon: %.15g != %.15g (input=%.15g,%.15g)\n", result.lon, result2.lon, lat, lon);
+	if (decoded_lon != decoded_lon2) {
+	    fprintf(stderr, "decoded_lon != decoded_lon2: %.15g != %.15g (input=%.15g,%.15g)\n", decoded_lon, decoded_lon2, lat, lon);
 	    return false;
 	}
 	if (!in_box) {
@@ -157,7 +163,6 @@ int main() {
 
     // Check decoding using a bounding box which includes the south pole.
     GeoEncode::DecoderWithBoundingBox bb(-90, -60, 10, 50);
-    GeoEncode::LatLongCoord c;
     check_bb(bb, -90, 0, true);
     check_bb(bb, -90, 49, true);
     check_bb(bb, -90, 50, true);
